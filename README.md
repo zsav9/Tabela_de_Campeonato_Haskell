@@ -1,0 +1,1 @@
+# Tabela_de_Campeonato_Haskell
