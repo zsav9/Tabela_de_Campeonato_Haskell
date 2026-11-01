@@ -50,16 +50,15 @@ participou :: Speedrunner -> Partida -> Bool
 participou nome partida = nome == speedrunnerA partida || nome == speedrunnerB partida
 
 -- resultado do ponto de vista do speedrunner, Nothing se ele nao participou
-resultadoPara :: Speedrunner -> Partida -> Maybe Resultado
-resultadoPara nome partida 
-  | nome == speedrunnerA partida = Just(comparar (seedsA partida) (seedsB partida))
-  | nome == speedrunnerB partida = Just(comparar (seedsB partida) (seedsA partida))
-  | otherwise = Nothing
-    where
-      comparar proprio adversario = case compare proprio adversario of
-        GT -> Vitoria
-        EQ -> Empate
-        LT -> Derrota
+resultadoPara nome partida =
+  if nome == speedrunnerA partida then Just (comparar (seedsA partida) (seedsB partida))
+  else if nome == speedrunnerB partida then Just (comparar (seedsB partida) (seedsA partida))
+  else Nothing
+  where
+    comparar proprio adversario = case compare proprio adversario of
+      GT -> Vitoria
+      EQ -> Empate
+      LT -> Derrota
       
 -- todos os speedrunners, sem repeticao e em ordem alfabetica
 times :: [Partida] -> [Speedrunner]
