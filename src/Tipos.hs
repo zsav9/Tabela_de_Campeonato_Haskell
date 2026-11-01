@@ -50,6 +50,7 @@ participou :: Speedrunner -> Partida -> Bool
 participou nome partida = nome == speedrunnerA partida || nome == speedrunnerB partida
 
 -- resultado do ponto de vista do speedrunner, Nothing se ele nao participou
+resultadoPara :: Speedrunner -> Partida -> Maybe Resultado
 resultadoPara nome partida =
   if nome == speedrunnerA partida then Just (comparar (seedsA partida) (seedsB partida))
   else if nome == speedrunnerB partida then Just (comparar (seedsB partida) (seedsA partida))
