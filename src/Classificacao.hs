@@ -73,6 +73,7 @@ saldo :: Linha -> Int
 saldo linha = seedsPro linha - seedsContra linha
     
 -- Percentual dos pontos disputados que foram conquistados (0 se nao jogou).
+aproveitamento :: Linha -> Double
 aproveitamento linha =
   if jogos linha == 0 then 0
   else 100 * fromIntegral (pontosLinha linha) / fromIntegral (pontos Vitoria * jogos linha)
