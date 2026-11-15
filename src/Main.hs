@@ -4,9 +4,19 @@ module Main (main) where
 import Classificacao
 import Dados
 import Leitura
+import Tipos
 
 main :: IO ()
 main = do
+  secao "0. consultas basicas da camada 1"
+  let duelo = Partida 1 "Dream" 3 1 "Feinberg"
+  print (resultadoPara "Dream" duelo)
+  print (resultadoPara "Feinberg" duelo)
+  print (resultadoPara "Benex" duelo)
+  print (participou "Feinberg" duelo)
+  print (participou "Benex" duelo)
+  print (times campeonatoTeste)
+  
   secao "1. Tabela final"
   either mostrarErro (putStr .tabelaFormatada . classificacao) (lerCampeonato dadosCampeonato)
 
