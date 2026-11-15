@@ -51,12 +51,13 @@ acumular nome linha partida = fromMaybe linha novaLinha
       (pro, contra) <- placarPara nome partida
       return linha
         { jogos = jogos linha + 1
-        , vitorias = vitorias linha + fromEnum (resultado == Vitoria)
-        , empates = empates linha + fromEnum (resultado == Empate)
-        , derrotas = derrotas linha + fromEnum (resultado == Derrota)
+        , vitorias = vitorias linha + contar (resultado == Vitoria)
+        , empates = empates linha + contar (resultado == Empate)
+        , derrotas = derrotas linha + contar (resultado == Derrota)
         , seedsPro = seedsPro linha + pro
         , seedsContra = seedsContra linha + contra
         }
+    contar condicao = if condicao then 1 else 0
         
 -- Linha da tabela de um speedrunner (percorre tds as partidas e acumula)
 linhaDoTime :: [Partida] -> Speedrunner -> Linha
