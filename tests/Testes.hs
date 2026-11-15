@@ -31,7 +31,7 @@ main = do
   testar "times: lista vazia" (times []) []
 
   putStrLn "Camada 2"
-  testar "classificacao completa (conferida a mao)"
+  testar "classificacao completa (conferida previamente)"
     (classificacao campeonatoTeste)
     [ Linha "Benex" 5 4 1 0 10 3
     , Linha "Dream" 5 2 1 2 9 7
