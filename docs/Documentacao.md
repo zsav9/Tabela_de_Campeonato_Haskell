@@ -36,4 +36,10 @@ Nomes como `participou`, `resultadoPara`, `times`, `linhaDoTime`, `ateRodada` e 
 - uma tabela intermediária após a rodada 3, com outro líder que a final.
 
 
-decisoes por camadas
+## Decisoes por camadas
+
+**Camada 1**
+
+**Camada 2**
+
+**Camada 3**
