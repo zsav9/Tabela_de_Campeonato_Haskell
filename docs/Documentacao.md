@@ -61,4 +61,6 @@ Um fator relevante para o funcionamento do sistema de pontuação foi o uso de `
 
 Para a construção da tabela completa e sua ordenação, foi utilizado `sortby` e `comparing`, na parte do comparing o uso de `Down` foi escolhido para inverter a ordem e os speedrunners com mais pontos aparecerem primeiro, facilitando a ordenação, e em caso de empate, ele cai no próximo comparing que repete a operação mas com os outros fatores de avaliação, até termos uma ordem organizada.
 
+Já nas partidas que foram jogadas, o `foldl` é utilizado na função `linhaDoTime` para percorrer a lista com todas as partidas do campeonato, da esquerda para a direita, mantendo a linha do participante atualizada progressivamente por meio da função `acumular`, que é aplicada a cada duelo.
+
 **Camada 3**
