@@ -57,6 +57,8 @@ Por fim, a função `times` utiliza `concatMap`, `nub` e `sort` para reunir os p
 
 **Camada 2**
 
-Um fator relevante para o funcionamento do sistema de pontuação foi o uso de maybe junto de just e nothing para cenários opcionais, ou seja, rodadas em que um speedrunner específico não tenha participado contra ninguém, assim os dados permaneciam sem ser alterados. Para a construção da tabela completa e sua ordenação, foi utilizado sortby e comparing, na parte do comparing o uso de Down foi escolhido para inverter a ordem e os speedrunners com mais pontos aparecerem primeiro, facilitando a ordenação, e em caso de empate, ele cai no próximo comparing que repete a operação mas com os outros fatores de avaliação, até termos uma ordem organizada.
+Um fator relevante para o funcionamento do sistema de pontuação foi o uso de `maybe` junto de `just` e `nothing` para cenários opcionais, ou seja, rodadas em que um speedrunner específico não tenha participado contra ninguém, assim os dados permaneciam sem ser alterados.
+
+Para a construção da tabela completa e sua ordenação, foi utilizado `sortby` e `comparing`, na parte do comparing o uso de `Down` foi escolhido para inverter a ordem e os speedrunners com mais pontos aparecerem primeiro, facilitando a ordenação, e em caso de empate, ele cai no próximo comparing que repete a operação mas com os outros fatores de avaliação, até termos uma ordem organizada.
 
 **Camada 3**
