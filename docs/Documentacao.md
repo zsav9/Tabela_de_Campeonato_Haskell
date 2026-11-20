@@ -63,4 +63,8 @@ Para a construção da tabela completa e sua ordenação, foi utilizado `sortby`
 
 Já nas partidas que foram jogadas, o `foldl` é utilizado na função `linhaDoTime` para percorrer a lista com todas as partidas do campeonato, da esquerda para a direita, mantendo a linha do participante atualizada progressivamente por meio da função `acumular`, que é aplicada a cada duelo.
 
+E para cenários em que só desejamos os dados de duelos até uma rodada informada (ela inclusa), utilizamos `filter`, que percorre a lista e mantém apenas os elementos que satisfazem a condição passada `((<=limite) . rodada)`. O operador ponto é utilizado para a composição de funções, no caso apresentado, é primeiro extraído o número da rodada de cada partida, através de `rodada`, e em seguida é comparado ao limite informado, o mantendo somente se menor ou igual.
+
+Por último, o `map` é utilizado tanto em `classificacao` e `mediaSeeds`, porém com intuito diferente. Em `classificacao` (`sortBy criterio (map (linhaDoTime partidas) (times partidas))`) ele aplica a função `linhaDoTime` a cada participante retornado por `times partidas`, transformando a lista de nomes dos participantes em uma lista de linhas de classificação. Já em `mediaSeeds` (`sum (map (\p -> seedsA p + seedsB p) partidas)`), o map aplica a função lambda `(\p -> seedsA p + seedsB p)`, somando as seeds conquistadas pelos dois speedrunners de cada duelo e gerando uma nova lista contendo o total de seeds de cada partida, posteriormente usada pela função `sum`.
+
 **Camada 3**
