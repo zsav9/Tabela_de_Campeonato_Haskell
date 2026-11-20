@@ -38,7 +38,22 @@ Nomes como `participou`, `resultadoPara`, `times`, `linhaDoTime`, `ateRodada` e 
 
 ## Decisoes por camadas
 
-**Camada 1**
+
+### Camada 1
+
+Para representar os dados do campeonato, foi utilizado um sinônimo de tipo (`type Speedrunner = String`) para identificar os participantes pelo nome. Essa escolha permite trabalhar diretamente com nomes, mantendo o código simples e deixando as assinaturas das funções mais descritivas.
+
+O tipo `Resultado` foi definido como um tipo soma, com três possibilidades: `Vitoria`, `Empate` e `Derrota`. Dessa forma, os resultados ficam padronizados, evitando o uso de números ou textos para representar cada situação. Os valores desse tipo representam o resultado de uma partida pela perspectiva de um speedrunner específico, podendo ser diferentes dependendo de qual participante está sendo consultado.
+
+Para representar os duelos, foi utilizado o tipo `Partida` com campos nomeados (record), contendo a rodada, os dois speedrunners e a quantidade de seeds vencidas por cada um (`speedrunnerA`, `seedsA`, `seedsB` e `speedrunnerB`). Essa estrutura facilita o acesso às informações e diminui a possibilidade de confundir os participantes e seus respectivos resultados.
+
+Também foi criado o tipo `Linha`, responsável por armazenar os dados individuais de cada speedrunner na classificação, como quantidade de jogos, vitórias, empates, derrotas, seeds a favor e seeds contra.
+
+Na função `participou`, foi utilizada uma comparação entre o nome informado e os dois participantes da partida, retornando um valor booleano que indica se aquele speedrunner participou do duelo.
+
+Na função `resultadoPara`, foi utilizado o tipo `Maybe Resultado`, retornando `Just` com o resultado correspondente quando o speedrunner participou da partida e `Nothing` quando não participou. Essa escolha permite representar situações em que não existe um resultado para determinado participante, sem precisar criar um resultado artificial. Internamente, a função auxiliar `comparar` usa `compare` e converte `GT`, `EQ` e `LT` em `Vitoria`, `Empate` e `Derrota`. Como a mesma lógica vale para A e para B, basta inverter a ordem dos argumentos, o que evita duplicar código.
+
+Por fim, a função `times` utiliza `concatMap`, `nub` e `sort` para reunir os participantes de todas as partidas, remover nomes repetidos e organizar a lista em ordem alfabética. A ordenação deixa a saída determinística, o que facilita os testes e a tabela final.
 
 **Camada 2**
 
