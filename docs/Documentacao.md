@@ -68,3 +68,6 @@ E para cenários em que só desejamos os dados de duelos até uma rodada informa
 Por último, o `map` é utilizado tanto em `classificacao` e `mediaSeeds`, porém com intuito diferente. Em `classificacao` (`sortBy criterio (map (linhaDoTime partidas) (times partidas))`) ele aplica a função `linhaDoTime` a cada participante retornado por `times partidas`, transformando a lista de nomes dos participantes em uma lista de linhas de classificação. Já em `mediaSeeds` (`sum (map (\p -> seedsA p + seedsB p) partidas)`), o map aplica a função lambda `(\p -> seedsA p + seedsB p)`, somando as seeds conquistadas pelos dois speedrunners de cada duelo e gerando uma nova lista contendo o total de seeds de cada partida, posteriormente usada pela função `sum`.
 
 **Camada 3**
+
+A terceira camada começa com a definição do tipo `Erro`, onde são apresentados os diferentes casos de erros que podem acontecer durante a leitura e validação dos dados. Com o uso do `deriving (Show, Eq) `, o `Show` permite gerar representações textuais para os erros e o `Eq` permite comparar dois erros para conferir se são iguais. As mensagens de erro apresentadas são criadas através de `mensagemErro`, que recebe o erro e retorna uma string com uma mensagem clara para o usuário, incluindo a linha onde o erro ocorreu quando aplicável.
+
