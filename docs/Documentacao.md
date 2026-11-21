@@ -71,3 +71,7 @@ Por último, o `map` é utilizado tanto em `classificacao` e `mediaSeeds`, poré
 
 A terceira camada começa com a definição do tipo `Erro`, onde são apresentados os diferentes casos de erros que podem acontecer durante a leitura e validação dos dados. Com o uso do `deriving (Show, Eq) `, o `Show` permite gerar representações textuais para os erros e o `Eq` permite comparar dois erros para conferir se são iguais. As mensagens de erro apresentadas são criadas através de `mensagemErro`, que recebe o erro e retorna uma string com uma mensagem clara para o usuário, incluindo a linha onde o erro ocorreu quando aplicável.
 
+Em seguida a função `separar` utiliza `foldr` para percorrer a string caractere por caractere, dividindo o conteúdo sempre que encontra o separador `; `. Dessa forma, cada linha do arquivo é transformada em uma lista de campos, permitindo identificar a rodada, os nomes dos speedrunners e suas respectivas seeds. Em seguida, a função `removeEspacos` utiliza `dropWhile` e `dropWhileEnd` para remover espaços desnecessários do início e do final de cada campo, evitando problemas durante a leitura.
+
+E em `lerNumero`, a função tenta converter uma `string` em um valor `int`, mas ela utiliza um `Maybe` para quando o conteúdo passado não representa um número válido. Ela trabalha em conjunto com `paraEither`, que transforma o resultado em um `Either`, possibilitando retornar um erro ou o valor convertido. Esse recurso também sendo utilizado em `lerPartida` para converter os campos numéricos da partida antes de realizar as demais validações.
+
