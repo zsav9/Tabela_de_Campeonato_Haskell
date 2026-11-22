@@ -57,9 +57,9 @@ Por fim, a função `times` utiliza `concatMap`, `nub` e `sort` para reunir os p
 
 **Camada 2**
 
-Um fator relevante para o funcionamento do sistema de pontuação foi o uso de `maybe` junto de `just` e `nothing` para cenários opcionais, ou seja, rodadas em que um speedrunner específico não tenha participado contra ninguém, assim os dados permaneciam sem ser alterados.
+Um fator relevante para o funcionamento do sistema de pontuação foi o uso do `do` do `Maybe` junto de `fromMaybe` em `acumular`, para cenários opcionais, ou seja, duelos em que um speedrunner específico não tenha participado. Nesses casos, `resultadoPara` e `placarPara` devolvem `Nothing` e os dados permaneciam sem ser alterados.
 
-Para a construção da tabela completa e sua ordenação, foi utilizado `sortby` e `comparing`, na parte do comparing o uso de `Down` foi escolhido para inverter a ordem e os speedrunners com mais pontos aparecerem primeiro, facilitando a ordenação, e em caso de empate, ele cai no próximo comparing que repete a operação mas com os outros fatores de avaliação, até termos uma ordem organizada.
+Para a construção da tabela completa e sua ordenação, foi utilizado `sortBy` e `comparing`, na parte do comparing o uso de `Down` foi escolhido para inverter a ordem e os speedrunners com mais pontos aparecerem primeiro, facilitando a ordenação, e em caso de empate, ele cai no próximo comparing que repete a operação mas com os outros fatores de avaliação, até termos uma ordem organizada.
 
 Já nas partidas que foram jogadas, o `foldl` é utilizado na função `linhaDoTime` para percorrer a lista com todas as partidas do campeonato, da esquerda para a direita, mantendo a linha do participante atualizada progressivamente por meio da função `acumular`, que é aplicada a cada duelo.
 
@@ -71,7 +71,24 @@ Por último, o `map` é utilizado tanto em `classificacao` e `mediaSeeds`, poré
 
 A terceira camada começa com a definição do tipo `Erro`, onde são apresentados os diferentes casos de erros que podem acontecer durante a leitura e validação dos dados. Com o uso do `deriving (Show, Eq) `, o `Show` permite gerar representações textuais para os erros e o `Eq` permite comparar dois erros para conferir se são iguais. As mensagens de erro apresentadas são criadas através de `mensagemErro`, que recebe o erro e retorna uma string com uma mensagem clara para o usuário, incluindo a linha onde o erro ocorreu quando aplicável.
 
-Em seguida a função `separar` utiliza `foldr` para percorrer a string caractere por caractere, dividindo o conteúdo sempre que encontra o separador `; `. Dessa forma, cada linha do arquivo é transformada em uma lista de campos, permitindo identificar a rodada, os nomes dos speedrunners e suas respectivas seeds. Em seguida, a função `removeEspacos` utiliza `dropWhile` e `dropWhileEnd` para remover espaços desnecessários do início e do final de cada campo, evitando problemas durante a leitura.
+Em seguida a função `separar` utiliza `foldr` para percorrer a string caractere por caractere, dividindo o conteúdo sempre que encontra o separador `;`. Dessa forma, cada linha do arquivo é transformada em uma lista de campos, permitindo identificar a rodada, os nomes dos speedrunners e suas respectivas seeds. Em seguida, a função `removeEspacos` utiliza `dropWhile` e `dropWhileEnd` para remover espaços desnecessários do início e do final de cada campo, evitando problemas durante a leitura.
 
-E em `lerNumero`, a função tenta converter uma `string` em um valor `int`, mas ela utiliza um `Maybe` para quando o conteúdo passado não representa um número válido. Ela trabalha em conjunto com `paraEither`, que transforma o resultado em um `Either`, possibilitando retornar um erro ou o valor convertido. Esse recurso também sendo utilizado em `lerPartida` para converter os campos numéricos da partida antes de realizar as demais validações.
+E em `lerNumero`, a função tenta converter uma `String` em um valor `Int`, mas ela utiliza um `Maybe` para quando o conteúdo passado não representa um número válido. Ela trabalha em conjunto com `paraEither`, que transforma o resultado em um `Either`, possibilitando retornar um erro ou o valor convertido. Esse recurso também sendo utilizado em `lerPartida` para converter os campos numéricos da partida antes de realizar as demais validações.
+
+Em `lerPartida`, a linha é separada em campos e, caso tenha exatamente 5, é utilizado o `do` do `Either` para ler a rodada e as seeds com `lerNumero`. Dessa forma, o primeiro `Left` encontrado para a leitura da linha e já é retornado como erro, sem precisar de verificações repetidas. Depois das conversões, são feitas as demais validações com `if` e `else`: placar negativo (`PlacarNegativo`) e speedrunner jogando contra ele mesmo (`MesmoSpeedrunner`). Se a linha não tem 5 campos, o retorno é `CamposInvalidos`. A conversão dos números usa `readMaybe`, nunca `read`, para que um texto inválido não quebre o programa.
+
+Já em `lerCampeonato`, o `traverse` aplica `lerPartida` a cada linha útil do texto (`linhasUteis`, que ignora linhas em branco e comentários com `#`, mas mantém a numeração original para o número do erro bater com o do editor). Se alguma linha falhar, o `traverse` devolve o primeiro erro; se todas passarem, é feita a última validação com `repeticoes`, que verifica se algum speedrunner aparece em mais de um duelo na mesma rodada (`SpeedrunnerRepetidoNaRodada`).
+
+A função `todosOsErros` existe para o caso em que queremos ver todos os problemas de uma vez, e não só o primeiro. Ela usa `lefts` para juntar os erros de todas as linhas e `rights` para pegar as partidas válidas, sobre as quais `repeticoes` procura os erros de rodada. Por isso, uma linha já rejeitada não é contada de novo nos erros de rodada.
+
+Finalizando, apenas `main` faz `IO`, e só imprime o que as funções calculam. Não tem `getLine`:, pois os dados do campeonato ficam em `Dados.hs`, como `String`.
+
+**Limitações conhecidas**
+
+- "Dream" e "dream" são tratados como speedrunners diferentes; só se removem os espaços das pontas no tratamento.
+- Os nomes dos speedrunners não podem conter `;`.
+- Não há confronto direto, como desempate.
+- Placares grandes demais para o `Int` dão resultado errado sem aviso. 
+- `todosOsErros` não repete o erro de rodada se a linha que o causaria já foi rejeitada por outro motivo.
+- A rodada não é validada, então valores como 0 ou negativos são aceitos
 
