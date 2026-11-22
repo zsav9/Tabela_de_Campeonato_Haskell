@@ -81,7 +81,7 @@ Já em `lerCampeonato`, o `traverse` aplica `lerPartida` a cada linha útil do t
 
 A função `todosOsErros` existe para o caso em que queremos ver todos os problemas de uma vez, e não só o primeiro. Ela usa `lefts` para juntar os erros de todas as linhas e `rights` para pegar as partidas válidas, sobre as quais `repeticoes` procura os erros de rodada. Por isso, uma linha já rejeitada não é contada de novo nos erros de rodada.
 
-Finalizando, apenas `main` faz `IO`, e só imprime o que as funções calculam. Não tem `getLine`:, pois os dados do campeonato ficam em `Dados.hs`, como `String`.
+Finalizando, apenas `main` faz `IO`, e só imprime o que as funções calculam. Não tem `getLine`, pois os dados do campeonato ficam em `Dados.hs`, como `String`.
 
 **Limitações conhecidas**
 
