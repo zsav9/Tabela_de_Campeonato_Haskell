@@ -2,7 +2,7 @@
 
 Campeonato de speedrun de Minecraft, com duelos 1v1 e até 4 seeds por duelo. Os resultados são lidos de um texto, validados com `Maybe` e `Either`, e a tabela de classificação é calculada só com funções de ordem superior.
 
-**Ambiente usado:** GHC local instalado via GHCup, compilado com `-Wall`. O código também foi testado no play.haskell.org.
+**Ambiente verificado:** GHC 9.10.3 instalado via GHCup, compilado com `-Wall` sem avisos.
 
 ## Estrutura
  
@@ -23,8 +23,9 @@ projeto/
 Na pasta do projeto:
  
 ```
-ghc -Wall -isrc -outputdir build src/Main.hs -o build/speedrun
-./build/speedrun
+mkdir build
+ghc -Wall -isrc -outputdir build src/Main.hs -o build/speedrun.exe
+./build/speedrun.exe
 ```
 
 Ou, sem gerar executável: `runghc -isrc src/Main.hs`
@@ -35,7 +36,7 @@ Ou, sem gerar executável: `runghc -isrc src/Main.hs`
 runghc -isrc tests/Testes.hs
 ```
 
-Cada linha da saída começa com `ok` ou `falhou`. São 42 testes no total.
+Cada linha de teste começa com `ok` ou `falhou`. A suíte encerra com código de erro se algum teste falhar. São 58 testes no total.
 
 ## Sobre o `main`
  
@@ -50,7 +51,7 @@ Os dados do campeonato ficam no próprio código (`Dados.hs`), como `String`.
 
 ## Formato da entrada
  
-Uma partida por linha, campos separados por `;`. Linhas em branco e linhas que começam com `#` são ignoradas.
+Uma partida por linha, campos separados por `;`. Linhas em branco e linhas que começam com `#` são ignoradas. A rodada deve ser positiva, os dois nomes não podem estar vazios e o total de seeds vencidas não pode passar de 4.
 
  
 ```
@@ -70,4 +71,4 @@ Na tabela impressa, as colunas são: posição, speedrunner, pontos (Pts), jogos
 
 ## Decisões e limitações
  
-Veja `docs/decisoes.md`
+Veja [docs/decisoes.md](docs/decisoes.md).

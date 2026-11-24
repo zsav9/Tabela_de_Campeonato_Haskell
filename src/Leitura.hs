@@ -15,16 +15,20 @@ module Leitura
   
 import Classificacao
 import Data.Char (isSpace)
-import Data.List (dropWhileEnd, isPrefixOf, nub)
+import Data.List (dropWhileEnd, group, intercalate, isPrefixOf, sort, transpose)
+import qualified Data.List as List (foldl')
 import Text.Read (readMaybe)
-import Data.Maybe (fromMaybe, listToMaybe)
+import Data.Maybe (fromMaybe, listToMaybe, mapMaybe)
 import Data.Either (lefts, rights)
 import Tipos
 
 data Erro
   = CamposInvalidos Int String
     | NumeroInvalido Int String
+    | RodadaInvalida Int
+    | NomeVazio Int
     | PlacarNegativo Int
+    | SeedsExcedidas Int
     | MesmoSpeedrunner Int Speedrunner
     | SpeedrunnerRepetidoNaRodada Int Speedrunner
   deriving (Show, Eq)
@@ -33,7 +37,10 @@ data Erro
 mensagemErro :: Erro -> String
 mensagemErro (CamposInvalidos numeroLinha texto) = "linha " ++ show numeroLinha ++ ": esperados 5 campos separados por ';' em \"" ++ texto ++ "\""
 mensagemErro (NumeroInvalido numeroLinha campo) = "linha " ++ show numeroLinha ++ ": \"" ++ campo ++ "\" nao e um numero valido"
+mensagemErro (RodadaInvalida numeroLinha) = "linha " ++ show numeroLinha ++ ": a rodada deve ser positiva"
+mensagemErro (NomeVazio numeroLinha) = "linha " ++ show numeroLinha ++ ": os nomes dos speedrunners nao podem estar vazios"
 mensagemErro (PlacarNegativo numeroLinha) = "linha " ++ show numeroLinha ++ ": o placar nao pode ser negativo"
+mensagemErro (SeedsExcedidas numeroLinha) = "linha " ++ show numeroLinha ++ ": o duelo pode ter no maximo 4 seeds vencidas"
 mensagemErro (MesmoSpeedrunner numeroLinha nome) = "linha " ++ show numeroLinha ++ ": " ++ nome ++ " nao pode jogar contra si mesmo"
 mensagemErro (SpeedrunnerRepetidoNaRodada numeroRodada nome) = "rodada " ++ show numeroRodada ++ ": " ++ nome ++ " aparece em mais de um duelo"
   
@@ -53,7 +60,13 @@ paraEither erro Nothing = Left erro
 paraEither _ (Just x) = Right x
 
 lerNumero :: Int -> String -> Either Erro Int
-lerNumero numeroLinha campo = paraEither (NumeroInvalido numeroLinha campo) (readMaybe campo)
+lerNumero numeroLinha campo = paraEither (NumeroInvalido numeroLinha campo) numero
+  where
+    numero = do
+      valor <- readMaybe campo :: Maybe Integer
+      if valor >= toInteger (minBound :: Int) && valor <= toInteger (maxBound :: Int)
+        then Just (fromInteger valor)
+        else Nothing
 
 lerPartida :: Int -> String -> Either Erro Partida
 lerPartida numeroLinha linha =
@@ -62,9 +75,12 @@ lerPartida numeroLinha linha =
       numeroRodada <- lerNumero numeroLinha campoRodada
       seedsdoA <- lerNumero numeroLinha camposeedsA
       seedsdoB <- lerNumero numeroLinha camposeedsB
-      if seedsdoA < 0 then Left (PlacarNegativo numeroLinha)
+      if numeroRodada <= 0 then Left (RodadaInvalida numeroLinha)
+      else if null nomeA || null nomeB then Left (NomeVazio numeroLinha)
+      else if seedsdoA < 0 then Left (PlacarNegativo numeroLinha)
       else if seedsdoB < 0 then Left (PlacarNegativo numeroLinha)
       else if nomeA == nomeB then Left (MesmoSpeedrunner numeroLinha nomeA)
+      else if toInteger seedsdoA + toInteger seedsdoB > 4 then Left (SeedsExcedidas numeroLinha)
       else Right (Partida numeroRodada nomeA seedsdoA seedsdoB nomeB)
     _ -> Left (CamposInvalidos numeroLinha linha)
 
@@ -75,12 +91,13 @@ linhasUteis = filter (ehPartida . snd) . zip [1 ..] . lines
 
 -- quem aparece em mais de um duelo na mesma rodada
 repeticoes :: [Partida] -> [(Int, Speedrunner)]
-repeticoes partidas = concatMap repetidosDaRodada (nub (map rodada partidas))
+repeticoes = repeticoesDe . concatMap identidades
   where
-    repetidosDaRodada numeroRodada = map (\nome -> (numeroRodada, nome)) (repetidos (nomesDaRodada numeroRodada))
-    nomesDaRodada numeroRodada = concatMap (\partida -> [speedrunnerA partida, speedrunnerB partida])
-                (filter ((== numeroRodada) . rodada) partidas)
-    repetidos nomes = nub (filter (\nome -> length (filter (== nome) nomes) > 1) nomes)
+    identidades partida =
+      [(rodada partida, speedrunnerA partida), (rodada partida, speedrunnerB partida)]
+
+repeticoesDe :: [(Int, Speedrunner)] -> [(Int, Speedrunner)]
+repeticoesDe = mapMaybe listToMaybe . filter ((> 1) . length) . group . sort
 
 lerCampeonato :: String -> Either Erro [Partida]
 lerCampeonato texto = do
@@ -90,9 +107,43 @@ lerCampeonato texto = do
     [] -> Right partidas
 
 todosOsErros :: String -> [Erro]
-todosOsErros texto = lefts resultados ++ map (\ (numeroRodada, nome) -> SpeedrunnerRepetidoNaRodada numeroRodada nome) (repeticoes (rights resultados))
+todosOsErros texto = concatMap errosDaLinha uteis
+  ++ map (\(numeroRodada, nome) -> SpeedrunnerRepetidoNaRodada numeroRodada nome)
+    (repeticoesDe (concatMap identidadesReconhecidas uteis))
   where
-    resultados = map (\(numeroLinha, linha) -> lerPartida numeroLinha linha) (linhasUteis texto)
+    uteis = linhasUteis texto
+    errosDaLinha (numeroLinha, linha) =
+      case map removeEspacos (separar ';' linha) of
+        [campoRodada, nomeA, campoA, campoB, nomeB] ->
+          let numeroRodada = lerNumero numeroLinha campoRodada
+              numeroA = lerNumero numeroLinha campoA
+              numeroB = lerNumero numeroLinha campoB
+              errosNumeros = lefts [numeroRodada, numeroA, numeroB]
+              erroRodada = case numeroRodada of
+                Right valor | valor <= 0 -> [RodadaInvalida numeroLinha]
+                _ -> []
+              erroNome = [NomeVazio numeroLinha | null nomeA || null nomeB]
+              erroPlacar = [PlacarNegativo numeroLinha |
+                any (< 0) (rights [numeroA, numeroB])]
+              erroMesmo = [MesmoSpeedrunner numeroLinha nomeA |
+                not (null nomeA) && nomeA == nomeB]
+              erroSeeds = case (numeroA, numeroB) of
+                (Right a, Right b) | a >= 0 && b >= 0
+                  && toInteger a + toInteger b > 4 -> [SeedsExcedidas numeroLinha]
+                _ -> []
+          in errosNumeros ++ erroRodada ++ erroNome ++ erroPlacar
+            ++ erroMesmo ++ erroSeeds
+        _ -> [CamposInvalidos numeroLinha linha]
+    identidadesReconhecidas (numeroLinha, linha) =
+      case map removeEspacos (separar ';' linha) of
+        [campoRodada, nomeA, _, _, nomeB] ->
+          case lerNumero numeroLinha campoRodada of
+            Right numeroRodada | numeroRodada > 0 ->
+              map (\nome -> (numeroRodada, nome))
+                (filter (not . null)
+                  (if nomeA == nomeB then [nomeA] else [nomeA, nomeB]))
+            _ -> []
+        _ -> []
 
 -- alinha o texto na coluna
 alinharDireita :: Int -> String -> String
@@ -104,33 +155,28 @@ alinharEsquerda largura texto = texto ++ replicate (largura - length texto) ' '
 mostrarSaldo :: Int -> String
 mostrarSaldo valor = if valor > 0 then "+" ++ show valor else show valor
 
-linhaFormatada :: Int -> Linha -> String
-linhaFormatada posicao linha = concat
-  [ alinharDireita 3 (show posicao)
-  , "  "
-  , alinharEsquerda 14 (speedrunner linha)
-  , alinharDireita 5 (show (pontosLinha linha))
-  , alinharDireita 4 (show (jogos linha))
-  , alinharDireita 4 (show (vitorias linha))
-  , alinharDireita 4 (show (empates linha))
-  , alinharDireita 4 (show (derrotas linha))
-  , alinharDireita 7 (mostrarSaldo (saldo linha))
+camposLinha :: Int -> Linha -> [String]
+camposLinha posicao linha =
+  [ show posicao
+  , speedrunner linha
+  , show (pontosLinha linha)
+  , show (jogos linha)
+  , show (vitorias linha)
+  , show (empates linha)
+  , show (derrotas linha)
+  , mostrarSaldo (saldo linha)
   ]
 
 tabelaFormatada :: [Linha] -> String
-tabelaFormatada linhas = unlines (cabecalho : zipWith linhaFormatada [1 ..] linhas)
+tabelaFormatada linhas = unlines (map formatar (cabecalho : dados))
   where
-    cabecalho = concat
-      [ alinharDireita 3 "#"
-      , "  "
-      , alinharEsquerda 14 "Speedrunner"
-      , alinharDireita 5 "Pts"
-      , alinharDireita 4 "J"
-      , alinharDireita 4 "V"
-      , alinharDireita 4 "E"
-      , alinharDireita 4 "D"
-      , alinharDireita 7 "Saldo"
-      ]
+    cabecalho = ["#", "Speedrunner", "Pts", "J", "V", "E", "D", "Saldo"]
+    dados = zipWith camposLinha [1 ..] linhas
+    larguras = map (List.foldl' max 0 . map length) (transpose (cabecalho : dados))
+    formatar campos = intercalate "  " (zipWith3 alinhar [0 :: Int ..] larguras campos)
+    alinhar indice largura texto
+      | indice == 1 = alinharEsquerda largura texto
+      | otherwise = alinharDireita largura texto
 
 descreverPartida :: Partida -> String
 descreverPartida partida = "rodada " ++ show (rodada partida) ++ ": " ++ speedrunnerA partida ++ " " ++ show (seedsA partida) ++ " x " ++ show (seedsB partida) ++ " " ++ speedrunnerB partida

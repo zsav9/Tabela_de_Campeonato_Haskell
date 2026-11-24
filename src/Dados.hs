@@ -11,10 +11,10 @@
 --   pos  speedrunner  pts  J  V  E  D  pro  contra  saldo
 --    1   Benex         13  5  4  1  0   10    3      +7
 --    2   Dream          7  5  2  1  2    9    7      +2
---    3   Techno         7  5  2  1  2    9    9       0
+--    3   Techno         7  5  2  1  2    8    8       0
 --    4   Illumina       6  5  1  3  1    6    6       0
 --    5   Couriway       5  5  1  2  2    7    8      -1
---    6   Feinberg       3  5  1  0  4    5   13      -8
+--    6   Feinberg       3  5  1  0  4    4   12      -8
 
 module Dados
   ( campeonatoTeste
@@ -30,7 +30,7 @@ campeonatoTeste =
   , Partida 1 "Couriway" 0 0 "Illumina"
   , Partida 1 "Dream" 4 0 "Feinberg"
   , Partida 2 "Benex" 1 1 "Illumina"
-  , Partida 2 "Techno" 3 2 "Feinberg"
+  , Partida 2 "Techno" 2 1 "Feinberg"
   , Partida 2 "Couriway" 1 2 "Dream"
   , Partida 3 "Benex" 2 0 "Feinberg"
   , Partida 3 "Illumina" 2 2 "Dream"
@@ -52,7 +52,7 @@ dadosCampeonato = unlines
   , "1;Dream;4;0;Feinberg"
   , ""
   , "2;Benex;1;1;Illumina"
-  , "2;Techno;3;2;Feinberg"
+  , "2;Techno;2;1;Feinberg"
   , "2;Couriway;1;2;Dream"
   , ""
   , "3;Benex;2;0;Feinberg"
@@ -82,7 +82,7 @@ dadosComErros = unlines
   , "1;Dream;4;0"
   , ""
   , "2;Benex;-1;1;Illumina"
-  , "2;Techno;3;2;Techno"
+  , "2;Techno;2;1;Techno"
   , "3;Benex;2;0;Feinberg"
   , "3;Dream;1;1;Benex"
   ]

@@ -19,8 +19,9 @@ module Classificacao
   , mediaSeeds
   ) where
   
-import Data.List (sortBy)
-import Data.Maybe (fromMaybe, listToMaybe)
+import Data.List (groupBy, sortBy)
+import qualified Data.List as List (foldl')
+import Data.Maybe (fromMaybe, listToMaybe, mapMaybe)
 import Data.Ord (Down(..), comparing)
 import Tipos
 
@@ -61,7 +62,7 @@ acumular nome linha partida = fromMaybe linha novaLinha
         
 -- Linha da tabela de um speedrunner (percorre tds as partidas e acumula)
 linhaDoTime :: [Partida] -> Speedrunner -> Linha
-linhaDoTime partidas nome = foldl (acumular nome) (linhaVazia nome) partidas
+linhaDoTime partidas nome = List.foldl' (acumular nome) (linhaVazia nome) partidas
 
 -- Pontos totais de uma linha.
 pontosLinha :: Linha -> Int
@@ -77,12 +78,23 @@ saldo linha = seedsPro linha - seedsContra linha
 aproveitamento :: Linha -> Double
 aproveitamento linha =
   if jogos linha == 0 then 0
-  else 100 * fromIntegral (pontosLinha linha) / fromIntegral (pontos Vitoria * jogos linha)
+  else 100 * fromIntegral (pontosLinha linha)
+    / (fromIntegral (pontos Vitoria) * fromIntegral (jogos linha))
   
 -- a tabela completa, uma linha por speedrunner, ordenada pelos criterios listados anteriormente
 classificacao :: [Partida] -> [Linha]
-classificacao partidas = sortBy criterio (map (linhaDoTime partidas) (times partidas))
+classificacao partidas = sortBy criterio (mapMaybe linhaDoGrupo grupos)
   where
+    contribuicoes partida
+      | speedrunnerA partida == speedrunnerB partida = [(speedrunnerA partida, partida)]
+      | otherwise = [(speedrunnerA partida, partida), (speedrunnerB partida, partida)]
+    grupos = groupBy mesmoSpeedrunner
+      (sortBy (comparing fst) (concatMap contribuicoes partidas))
+    mesmoSpeedrunner (nomeA, _) (nomeB, _) = nomeA == nomeB
+    linhaDoGrupo grupo = do
+      (nome, _) <- listToMaybe grupo
+      pure (List.foldl' (\linha (_, partida) -> acumular nome linha partida)
+        (linhaVazia nome) grupo)
     criterio =
       comparing (Down . pontosLinha) <> comparing (Down . saldo)
        <> comparing (Down . seedsPro)
@@ -93,18 +105,23 @@ ateRodada :: Int -> [Partida] -> [Partida]
 ateRodada limite = filter ((<= limite) . rodada)
 
 -- Diferenca de seeds de um duelo (sempre positiva ou zero).
-diferenca :: Partida -> Int
-diferenca partida = abs (seedsA partida - seedsB partida)
+diferenca :: Partida -> Integer
+diferenca partida = abs (toInteger (seedsA partida) - toInteger (seedsB partida))
 
 -- Duelo com maior diferenca de seeds, em caso de empate, o mais antigo da lista
 --  e Nothing para lista vazia
 maiorVantagem :: [Partida] -> Maybe Partida
-maiorVantagem = listToMaybe . sortBy (comparing (Down . diferenca))
+maiorVantagem = List.foldl' escolher Nothing
+  where
+    escolher Nothing partida = Just partida
+    escolher atual@(Just anterior) partida
+      | diferenca partida > diferenca anterior = Just partida
+      | otherwise = atual
 
 -- Media de seeds por duelo; Nothing para lista vazia.
 mediaSeeds :: [Partida] -> Maybe Double
 mediaSeeds [] = Nothing
 mediaSeeds partidas = Just (total / quantidade)
   where
-    total = fromIntegral (sum (map ( \p -> seedsA p + seedsB p) partidas))
+    total = fromIntegral (sum (map (\p -> toInteger (seedsA p) + toInteger (seedsB p)) partidas))
     quantidade = fromIntegral (length partidas)

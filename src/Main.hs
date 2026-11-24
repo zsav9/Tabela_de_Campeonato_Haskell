@@ -8,7 +8,10 @@ import Tipos
 
 main :: IO ()
 main = do
-  secao "0. consultas basicas da camada 1"
+  let secao titulo = "\n" ++ titulo
+      mostrarErro erro = "ERRO: " ++ mensagemErro erro
+      campeonato = lerCampeonato dadosCampeonato
+  putStrLn (secao "0. consultas basicas da camada 1")
   let duelo = Partida 1 "Dream" 3 1 "Feinberg"
   print (resultadoPara "Dream" duelo)
   print (resultadoPara "Feinberg" duelo)
@@ -17,26 +20,20 @@ main = do
   print (participou "Benex" duelo)
   print (times campeonatoTeste)
   
-  secao "1. Tabela final"
-  either mostrarErro (putStr .tabelaFormatada . classificacao) (lerCampeonato dadosCampeonato)
+  putStrLn (secao "1. Tabela final")
+  either (putStrLn . mostrarErro) (putStr . tabelaFormatada . classificacao) campeonato
 
-  secao "2. Tabela apos a rodada 3"
-  either mostrarErro (putStr .tabelaFormatada . classificacao . ateRodada 3) (lerCampeonato dadosCampeonato)
+  putStrLn (secao "2. Tabela apos a rodada 3")
+  either (putStrLn . mostrarErro) (putStr . tabelaFormatada . classificacao . ateRodada 3) campeonato
 
-  secao "3. Estatisticas camada 2"
-  either mostrarErro (putStr .relatorioEstatisticas) (lerCampeonato dadosCampeonato)
+  putStrLn (secao "3. Estatisticas camada 2")
+  either (putStrLn . mostrarErro) (putStr . relatorioEstatisticas) campeonato
 
-  secao "4. Estatisticas de um campeonato vazio"
+  putStrLn (secao "4. Estatisticas de um campeonato vazio")
   putStr (relatorioEstatisticas [])
 
-  secao "5. Entrada com erros"
-  either mostrarErro (const (putStrLn "sem erros")) (lerCampeonato dadosComErros)
+  putStrLn (secao "5. Entrada com erros")
+  either (putStrLn . mostrarErro) (const (putStrLn "sem erros")) (lerCampeonato dadosComErros)
 
-  secao "6. Entrada com erros, todosOsErros"
+  putStrLn (secao "6. Entrada com erros, todosOsErros")
   mapM_ (putStrLn . mensagemErro) (todosOsErros dadosComErros)
-
-secao :: String -> IO ()
-secao titulo = putStrLn ("\n" ++ titulo)
-
-mostrarErro :: Erro -> IO ()
-mostrarErro erro = putStrLn ("ERRO:" ++ mensagemErro erro)

@@ -16,7 +16,8 @@ module Tipos
   , resultadoPara
   , times) where
   
-import Data.List (nub, sort)
+import Data.List (group, sort)
+import Data.Maybe (listToMaybe, mapMaybe)
 
 -- nome do speedrunner
 type Speedrunner = String
@@ -37,12 +38,12 @@ data Partida = Partida
 -- uma linha da tabela de classificacao
 data Linha = Linha
   { speedrunner :: Speedrunner
-  , jogos :: Int
-  , vitorias :: Int
-  , empates :: Int
-  , derrotas :: Int
-  , seedsPro :: Int
-  , seedsContra :: Int
+  , jogos :: !Int
+  , vitorias :: !Int
+  , empates :: !Int
+  , derrotas :: !Int
+  , seedsPro :: !Int
+  , seedsContra :: !Int
   } deriving (Show, Eq)
   
 -- "o speedrunner participou dessa partida?"
@@ -63,4 +64,5 @@ resultadoPara nome partida =
       
 -- todos os speedrunners, sem repeticao e em ordem alfabetica
 times :: [Partida] -> [Speedrunner]
-times = sort . nub . concatMap (\partida -> [speedrunnerA partida, speedrunnerB partida])
+times = mapMaybe listToMaybe . group . sort
+  . concatMap (\partida -> [speedrunnerA partida, speedrunnerB partida])
